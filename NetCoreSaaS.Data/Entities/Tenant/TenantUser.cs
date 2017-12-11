@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
+using NetCoreSaaS.Data.Abstracts;
 
 namespace NetCoreSaaS.Data.Entities.Tenant
 {
@@ -18,6 +19,13 @@ namespace NetCoreSaaS.Data.Entities.Tenant
 
         [Required]
         public DateTime LastUpdated { get; set; }
+
+    }
+
+    public class TenantDetails : EntityBase
+    {
+        public string Name { get; set; }
+        public string Address { get; set; }
 
     }
 }
