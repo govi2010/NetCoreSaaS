@@ -16,7 +16,7 @@ namespace NetCoreSaaS.Data.Contexts
     {
 
         private readonly Tenant _currentTenant;
-        public DbSet<TenantDetails> TenantDetails { get; set; }       
+        public DbSet<TenantDetails> TenantDetails { get; set; }
 
         public TenantDbContext(Tenant currentTenant)
         {
@@ -27,6 +27,28 @@ namespace NetCoreSaaS.Data.Contexts
             Database.Migrate();
         }
 
+        public override int SaveChanges()
+        {
+            foreach (var entry in ChangeTracker.Entries())
+            {
+                if (entry.State == EntityState.Added)
+                {
+                    entry.Property("CreatedDate").CurrentValue = DateTime.Now;
+                    entry.Property("UpdatedDate").CurrentValue = DateTime.Now;
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    entry.Property("UpdatedDate").CurrentValue = DateTime.Now;
+                }
+                else if (entry.State == EntityState.Deleted)
+                {
+                    entry.Property("DeletedDate").CurrentValue = DateTime.Now;
+                    entry.Property("IsDeleted").CurrentValue = true;
+                    entry.State = EntityState.Detached;
+                }
+            }
+            return base.SaveChanges();
+        }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -56,18 +78,18 @@ namespace NetCoreSaaS.Data.Contexts
 
 
         public TenantDbContext CreateDbContext(string[] args)
-        {            
-                var configuration = new ConfigurationBuilder()
-                    .SetBasePath(Directory.GetCurrentDirectory())
-                    .AddJsonFile("appsettings.json")
-                    .Build();
+        {
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json")
+                .Build();
 
-                _optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
+            _optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
 
-                var connectionString = configuration.GetConnectionString("DefaultConnection");
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
 
-                _optionsBuilder.UseSqlServer(connectionString, options => options.MigrationsAssembly("NetCoreSaaS.WebHost"));
-            return new TenantDbContext(new Tenant(){DbConnectionString = connectionString});
+            _optionsBuilder.UseSqlServer(connectionString, options => options.MigrationsAssembly("NetCoreSaaS.WebHost"));
+            return new TenantDbContext(new Tenant() { DbConnectionString = connectionString });
         }
     }
 }
